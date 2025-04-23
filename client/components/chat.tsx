@@ -3,6 +3,7 @@ import { SendHorizontal } from "lucide-react";
 import { Input } from "./ui/input";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 type Message = {
   role: string;
@@ -31,9 +32,26 @@ const ChatComponent = () => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleClick = () => {
+  const handleClick = async () => {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
-    setMessage("");
+    try {
+      const { data } = await axios.post("http://localhost:8080/resume/chat", {
+        query: message,
+      });
+      if (data.success) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "admin", content: data.message },
+        ]);
+        setMessage("");
+      }
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "admin", content: "Something wrong happen try again" },
+      ]);
+      console.log(error);
+    }
   };
   return (
     <div>
@@ -54,10 +72,10 @@ const ChatComponent = () => {
               <span
                 className={`bg-gray-400 h-10 w-10 flex justify-center items-center text-white rounded-full mr-1 `}
               >
-                A
+                🤖
               </span>
             )}
-            <div className='bg-gray-200 p-2 rounded-md max-w-xs whitespace-pre-wrap'>
+            <div className='bg-gray-200 p-2 rounded-md max-w-xs whitespace-pre-wrap w-full'>
               {mess.content}
             </div>
             {mess.role === "user" && (
